@@ -1,0 +1,56 @@
+This is a very simple framework to be able to access database rows as 
+objects without forcing you to inherit from a Model class. Instead
+you create the class-hierarchy you want and use mixin to add
+persistance functionality to the object.
+
+It a lot simpler than an real Object-Relation-Mapper since it's ignores relations.
+
+The benefit of this framework is that you can write code like this:
+
+class AnObject 
+  include DBStruct
+  @non_persisted_field
+  attr_accessor :non_persisted_field
+  
+  def initialize(*args)
+    @non_persisted_field = args[0]
+  end
+  
+  def return_value_from_field
+    return @non_persisted_field
+  end
+end
+
+Create a simple migration:
+
+class CreateDb < Sequel::Migration
+  def up
+    create_table :person do
+      primary_key :id
+      text :name
+      float :amount
+      integer :age
+    end
+  end
+end
+
+An then start coding. To create new field you only have to add it to the migration. 
+
+  DB = Sequel.sqlite '', :logger => [Logger.new($stdout)]
+  CreateDb.apply(DB,:up)
+  AnObject.bind_table(DB,:person)
+
+  r = AnObject.template
+  r.name = 'Donald'
+  r.amount = 10.1
+  r.age = 77
+
+  r.insert(DB)
+
+  r.age = 98
+  r.update(DB)
+  r.delete(DB)
+
+This framework relies heavely on the work of others (Sequel and OpenStruct)
+
+Morten Udnæs. 
