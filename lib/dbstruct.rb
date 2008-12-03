@@ -53,6 +53,11 @@ module DBStruct
     @_dbdata.marshal_dump(*args)
   end
   
+  def get(db, pkid)
+    @_dbdata.pkid = db[self.class.get_table].filter(:pkid =>pkid)
+  end
+  
+  
   def insert(db)
     @_dbdata.pkid = db[self.class.get_table].insert(save)
   end
@@ -61,19 +66,11 @@ module DBStruct
     db[self.class.get_table].filter({:pkid =>pkid}).delete
   end
    
- 
-  def delete!(db,search_criteria)
-    db[self.class.get_table].filter(search_criteria).delete
-  end
   
   def update(db)
     db[self.class.get_table].filter({:pkid => pkid}).update(save)
   end
-  
-  def update!(db,search_criteria)
-    db[self.class.get_table].filter(search_criteria).update(save)
-  end
-  
+ 
   
   # Define which fields are needed. Sent in as an array of symbols or strings
   def setup_fields(fields)
@@ -173,6 +170,23 @@ module DBStruct
       fields.each { |field| @@_template[field] = nil}
       return 
     end
+
+        
+  def find(db,search_criteria)
+    db[@@_table].filter(search_criteria)
+  end
+
+    
+  def delete!(db,search_criteria)
+    db[@@_table].filter(search_criteria).delete
+  end
+  
+   
+  def update!(db,search_criteria, update_criteria)
+    db[@@_table ].filter(search_criteria).update(update_criteria)
+  end
+  
+ 
     
     def template(*args)
       the_instance = self.new(*args)

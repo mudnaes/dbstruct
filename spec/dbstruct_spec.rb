@@ -80,7 +80,7 @@ end
   end
   
   
-  context "Use Class/Object to perform insert, read, update and delete" do
+  context "Use instance to perform insert, read, update and delete" do
     setup do
     end
     
@@ -94,17 +94,33 @@ end
       from_db.age == i.age.should
       
       i.amount = 12.1
-      #lambda {i.update!(DB, {:name => 'Donald', :age => 77})}.should_not raise_error
       i.update(DB)
       from_db = AnObject.find(DB,{:age => 77}).first
       from_db.name == i.name.should 
       from_db.amount == i.amount.should 
       from_db.age == i.age.should
       
-      lambda {i.delete!(DB,{:age => 77})}.should_not raise_error
+      lambda {AnObject.delete!(DB,{:age => 77})}.should_not raise_error
       #i.delete(DB)
       deleted = AnObject.find(DB,{:age => 77})
       deleted.should == []
+    end
+  end
+  
+  context "Using class to perform statements that changes multiple rows" do
+    specify "should update multiple rows" do
+      i1 = DBStruct_spec.create_test_object
+      i1.insert(DB)
+      i2 = DBStruct_spec.create_test_object
+      i2.insert(DB)
+      lambda {AnObject.update!(DB, {:name => 'Donald'}, :name => 'Dolly')}.should_not raise_error
+   
+      from_db = AnObject.find(DB,{:name => 'Dolly'}).first
+      from_db.name.should == 'Dolly'      
+    end
+    
+    specify "should delete multiple rows" do
+      
     end
   end
   
@@ -114,9 +130,10 @@ end
     
     specify "should be able to insert and read object indirectly" do
       r = DBStruct_spec.create_test_object
+      r.age = 88
       DB[:person].insert(r.save)
       
-      row = DB[:person].filter({:age => 77})
+      row = DB[:person].filter({:age => 88})
       from_db = AnObject.create(row).first
       from_db.name.should == r.name 
       from_db.age.should == r.age
